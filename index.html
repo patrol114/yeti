@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chatbot</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 5px;
+        }
+
+        input[type="submit"] {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .response {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Chatbot</h1>
+    </header>
+    <main>
+        <form id="chat-form">
+            <label for="user-message">Enter your message:</label>
+            <input type="text" id="user-message" required>
+            <input type="submit" value="Send">
+        </form>
+        <div id="response-container"></div>
+    </main>
+
+    <script>
+        // JavaScript code to send POST request and display chatbot's response
+
+        // Function to send POST request
+        function sendMessage(event) {
+            event.preventDefault();
+
+            const userMessage = document.getElementById('user-message').value;
+            const responseContainer = document.getElementById('response-container');
+            const xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        responseContainer.innerHTML += '<div class="response"><strong>You:</strong> ' + userMessage + '</div>';
+                        responseContainer.innerHTML += '<div class="response"><strong>Chatbot:</strong> ' + response.response + '</div>';
+                    } else {
+                        responseContainer.innerHTML += '<div class="response"><strong>Error:</strong> Failed to fetch response from the chatbot</div>';
+                    }
+                }
+            };
+
+            xhr.open('POST', '/chatbot', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({ user_input: userMessage }));
+
+            document.getElementById('user-message').value = '';
+        }
+
+        // Add event listener to form submit
+        document.getElementById('chat-form').addEventListener('submit', sendMessage);
+    </script>
+</body>
+</html>
