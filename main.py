@@ -52,7 +52,7 @@ def index():
 # Function to generate bot response
 def get_response(user_input):
     # Get LLama response
-    llama_resp = llama.predict(user_input)
+    llama_resp = llama.generate(user_input)
 
     # Generate GPT-2 response
     gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
