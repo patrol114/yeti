@@ -36,7 +36,7 @@ def generate_response(user_input):
         if llama_tokenizer is not None:
             llama_output = llama_tokenizer(llama_input, return_tensors="pt", truncation=True, max_length=512)
             if llama_output is not None:
-                llama_output = llama_output.tolist()
+                llama_output = llama_output["input_ids"].numpy()
 
         # Generate response using GPT-2
         gpt2_input = user_input_str
