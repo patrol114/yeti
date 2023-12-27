@@ -62,7 +62,7 @@ def chatbot():
 # Set up ngrok
 ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 ngrok_tunnel = ngrok.connect(9875)
-public_url = ngrok.get_tunnel(ngrok_tunnel.public_url).public_url
+public_url = ngrok_tunnel.public_url()
 
 if __name__ == '__main__':
     print("Public URL:", public_url)
