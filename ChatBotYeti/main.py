@@ -28,21 +28,25 @@ limiter = Limiter(app=app, key_func=get_remote_address)
 #print(public_url)
 #run_with_ngrok(app)
 
-# Chatbot Functionality
-@app.route("/chatbot", methods=["POST"])
-@limiter.limit("5 per minute")  # Rate limiting
-def chat():
-    try:
-        data = request.get_json()
-        user_input = data.get("user_input")
-        if user_input is None:
-            return jsonify({"error": "User input is missing."}), 400
+# Routing for index.html
+@app.route("/chatbot/index.html", methods=["GET", "POST"])
+def index():
+    if request.method == "GET":
+        # Jeśli to żądanie GET, zwróć stronę HTML
+        return render_template("index.html")
+    elif request.method == "POST":
+        # Jeśli to żądanie POST, przetwórz dane i zwróć odpowiedź
+        try:
+            data = request.get_json()
+            user_input = data.get("user_input")
+            if user_input is None:
+                return jsonify({"error": "User input is missing."}), 400
 
-        bot_response = get_response(user_input)
-        return jsonify({"response": bot_response})
+            bot_response = get_response(user_input)
+            return jsonify({"response": bot_response})
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 # Function to generate bot response
 def get_response(user_input):
