@@ -30,7 +30,7 @@ limiter = Limiter(app=app, key_func=get_remote_address)
 #run_with_ngrok(app)
 
 # Routing for index.html
-@app.route("/chatbot/index.html", methods=["GET", "POST"])
+@app.route("/chatbot", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
         # Jeśli to żądanie GET, zwróć stronę HTML
