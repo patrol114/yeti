@@ -1,11 +1,11 @@
 - step:
-    name: data-main
+    name: run-algorithms
     image: python:3.6
     command:
       - python main.py {parameters}
     inputs:
-      - name: raw-data
-        default: s3://yeti-datasets/raw-data.csv
+      - name: algorithms-data
+        default: https://github.com/TheAlgorithms/Python
     parameters:
       - name: parameter1
         type: integer
@@ -18,21 +18,7 @@
       - python main.py {parameters}
     inputs:
       - name: processed-data
-        default: s3://yeti-datasets/processed-data.csv
     parameters:
       - name: epochs
         type: integer
         default: 10
-
-- step:
-    name: run-inference
-    image: python:3.6
-    command:
-      - python main.py {parameters}
-    inputs:
-      - name: model
-        default: s3://yeti-models/model.h5
-    parameters:
-      - name: input-data
-        type: string
-        default: s3://yeti-datasets/inference-data.csv
