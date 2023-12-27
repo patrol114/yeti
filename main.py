@@ -1,80 +1,69 @@
-# Imports
 import torch
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from llama import Llama
-from flask import Flask, request, jsonify, render_template
+from transformers import AutoTokenizer, GPT2LMHeadModel
+from flask import Flask, request, render_template
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from re import sub
+import ngrok
 
-#import ngrok
-#from flask_ngrok import run_with_ngrok
-
-
-# Load pre-trained GPT-2 model
-gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2-medium")
-llama = Llama("lstm-large", tokenizer=gpt2_tokenizer)
-
-
-# Flask App Initialization
+# Set up Flask app and Limiter
 app = Flask(__name__)
-limiter = Limiter(app=app, key_func=get_remote_address)
-# Setup ngrok
-#ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
-#ngrok_tunnel = ngrok.connect(5601)
+limiter = Limiter(app)
 
-# Pobierz publiczny adres URL z ngrok_tunnel
-#public_url = ngrok_tunnel.public_url if hasattr(ngrok_tunnel, 'public_url') else "N/A"
+# Set up models and tokenizers
+gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
+gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2')
+llama_tokenizer = AutoTokenizer.from_pretrained('llama')
 
-#print(public_url)
-#run_with_ngrok(app)
+# Define a function to generate responses using both models
+def generate_response(user_input):
+    # Preprocess user input
+    user_input = sub(r'[^\w\s]', '', user_input)
+    user_input = user_input.lower()
+    tokens = word_tokenize(user_input)
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words]
 
-# Routing for index.html
-@app.route("/chatbot", methods=["GET", "POST"])
-def index():
-    if request.method == "GET":
-        # Jeśli to żądanie GET, zwróć stronę HTML
-        return render_template("index.html")
-    elif request.method == "POST":
-        # Jeśli to żądanie POST, przetwórz dane i zwróć odpowiedź
-        try:
-            data = request.get_json()
-            user_input = data.get("user_input")
-            if user_input is None:
-                return jsonify({"error": "User input is missing."}), 400
+    # Generate response using LLM
+    llama_input = " ".join(tokens)
+    llama_output = llama_tokenizer(llama_input, return_tensors="pt", truncation=True, max_length=512)
+    llama_output = torch.tensor(llama_output)
+    llama_preds = gpt2_model.generate(llama_output, max_length=512, num_return_sequences=1)
+    llama_output = llama_preds[0][0].tolist()
 
-            bot_response = get_response(user_input)
-            return jsonify({"response": bot_response})
+    # Generate response using GPT-2
+    gpt2_input = " ".join(tokens)
+    gpt2_output = gpt2_tokenizer(gpt2_input, return_tensors="pt", truncation=True, max_length=512)
+    gpt2_output = torch.tensor(gpt2_output)
+    gpt2_preds = gpt2_model.generate(gpt2_output, max_length=512, num_return_sequences=1)
+    gpt2_output = gpt2_preds[0][0].tolist()
 
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-# Function to generate bot response
-def get_response(user_input):
-    # Get LLama response with max_gen_len set to 50 (możesz dostosować wartość według potrzeb)
-    llama_resp = llama.generate(user_input, max_gen_len=50)
-
-    # Get LLama response
-    llama_resp = llama.generate(user_input)
-
-    # Ensure that llama_resp is a string
-    if isinstance(llama_resp, str):
-        # Handle the case when llama_resp is a string
-        # (you may need to adjust this based on llama's behavior)
-        llama_params = llama_resp.split()
-    else:
-        # Handle the case when llama_resp is not a string or doesn't contain params
-        return jsonify({"error": "Invalid response from LLama"}), 500
-
-    # Generate GPT-2 response
-    gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
-    gpt2_output = gpt2_model.generate(gpt2_input, max_length=100)
-
-    # Post-process GPT-2 response
-    response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
+    # Combine and return the final response
+    response = llama_output + " " + gpt2_output
     return response
 
+# Set up routes
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Execution
-if __name__ == "__main__":
+@app.route('/chatbot', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Rate limiting
+def chatbot():
+    if request.method == 'POST':
+        user_input = request.form.get('message')
+        response = generate_response(user_input)
+        return response
+    else:
+        return render_template('chatbot.html')
+
+# Set up ngrok
+ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
+ngrok_tunnel = ngrok.connect(9875)
+public_url = ngrok_tunnel.public_url
+
+if __name__ == '__main__':
+    print("Public URL:", public_url)
     app.run(debug=True, port=9875)
