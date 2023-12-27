@@ -21,7 +21,8 @@ limiter = Limiter(app=app, key_func=get_remote_address)
 # Setup ngrok
 ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 ngrok_tunnel = ngrok.connect(5000)
-print('Public URL:', ngrok_tunnel.public_url)
+
+print('Public URL:', ngrok_tunnel.info.get('public_url', 'N/A'))
 
 run_with_ngrok(app)
 
