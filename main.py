@@ -54,8 +54,17 @@ def get_response(user_input):
     # Get LLama response with max_gen_len set to 50 (możesz dostosować wartość według potrzeb)
     llama_resp = llama.generate(user_input, max_gen_len=50)
 
-    # Split the Llama response into parameters
-    llama_params = llama.params
+    # Get LLama response
+    llama_resp = llama.generate(user_input)
+
+    # Ensure that llama_resp is a string
+    if isinstance(llama_resp, str):
+        # Handle the case when llama_resp is a string
+        # (you may need to adjust this based on llama's behavior)
+        llama_params = llama_resp.split()
+    else:
+        # Handle the case when llama_resp is not a string or doesn't contain params
+        return jsonify({"error": "Invalid response from LLama"}), 500
 
     # Generate GPT-2 response
     gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
