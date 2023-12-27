@@ -1,11 +1,12 @@
 import torch
 from transformers import AutoTokenizer, GPT2LMHeadModel
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from flask_limiter import Limiter
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from re import sub
+import json
 
 # Set up Flask app and Limiter
 app = Flask(__name__)
