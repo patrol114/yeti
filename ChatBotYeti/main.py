@@ -22,10 +22,11 @@ limiter = Limiter(app=app, key_func=get_remote_address)
 ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 ngrok_tunnel = ngrok.connect(5601)
 
-tunnels = ngrok.get_tunnels()
-public_url = tunnels[0].public_url
+# Pobierz publiczny adres URL z ngrok_tunnel
+public_url = ngrok_tunnel.public_url
 
 print(public_url)
+
 
 run_with_ngrok(app)
 
