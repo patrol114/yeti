@@ -11,8 +11,8 @@ from flask_limiter.util import get_remote_address
 # Load pre-trained GPT-2 model
 gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2")
-llama_tokenizer = gpt2_tokenizer
-llama = Llama("lstm-large", tokenizer=llama_tokenizer)
+#llama_tokenizer = gpt2_tokenizer
+llama = Llama("lstm-large")
 
 
 # Flask App Initialization
