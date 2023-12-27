@@ -17,10 +17,6 @@ ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 # Numer portu, na którym będzie działać aplikacja
 port = 9875
 
-# Utworzenie tunelu ngrok i pobranie publicznego URL
-http_tunnel = ngrok.connect(port)
-print("Publiczny URL:", http_tunnel.public_url)
-
 # Set up models and tokenizers
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2')
@@ -68,6 +64,14 @@ def chatbot():
     else:
         return render_template('chatbot.html')
 
-if __name__ == "__main__":
+# Set up ngrok
+ngrok_tunnel = ngrok.connect(port)
+listener = ngrok.forward(port, authtoken_from_env=True)
+
+# Get public URL from status
+public_url = ngrok.get_status()['public_url']
+
+if __name__ == '__main__':
+    print("Public URL:", public_url)
     app.run(port=port, debug=True)
 
