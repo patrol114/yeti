@@ -22,7 +22,7 @@ def generate_response(user_input):
     # Check if llama_tokenizer is not None
     if llama_tokenizer is not None:
         # Preprocess user input
-        user_input = sub(r'[^\w\s]', '', user_input)
+        user_input = sub(r'[^\w\s]', '', str(user_input))  # Dodaj konwersję do ciągu
         user_input = user_input.lower()
         tokens = word_tokenize(user_input)
         stop_words = set(stopwords.words('english'))
