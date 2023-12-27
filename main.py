@@ -2,11 +2,12 @@
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from llama import Llama
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import ngrok
-from flask_ngrok import run_with_ngrok
+
+#import ngrok
+#from flask_ngrok import run_with_ngrok
 
 
 # Load pre-trained GPT-2 model
@@ -19,26 +20,34 @@ llama = Llama("lstm-large", tokenizer=gpt2_tokenizer)
 app = Flask(__name__)
 limiter = Limiter(app=app, key_func=get_remote_address)
 # Setup ngrok
-ngrok_tunnel = ngrok.connect(5000)
-print('Public URL:', ngrok_tunnel.public_url)
+#ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
+#ngrok_tunnel = ngrok.connect(5601)
 
-run_with_ngrok(app)
+# Pobierz publiczny adres URL z ngrok_tunnel
+#public_url = ngrok_tunnel.public_url if hasattr(ngrok_tunnel, 'public_url') else "N/A"
 
-# Chatbot Functionality
-@app.route("/chatbot", methods=["POST"])
-@limiter.limit("5 per minute")  # Rate limiting
-def chat():
-    try:
-        data = request.get_json()
-        user_input = data.get("user_input")
-        if user_input is None:
-            return jsonify({"error": "User input is missing."}), 400
+#print(public_url)
+#run_with_ngrok(app)
 
-        bot_response = get_response(user_input)
-        return jsonify({"response": bot_response})
+# Routing for index.html
+@app.route("/chatbot/index.html", methods=["GET", "POST"])
+def index():
+    if request.method == "GET":
+        # Jeśli to żądanie GET, zwróć stronę HTML
+        return render_template("index.html")
+    elif request.method == "POST":
+        # Jeśli to żądanie POST, przetwórz dane i zwróć odpowiedź
+        try:
+            data = request.get_json()
+            user_input = data.get("user_input")
+            if user_input is None:
+                return jsonify({"error": "User input is missing."}), 400
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+            bot_response = get_response(user_input)
+            return jsonify({"response": bot_response})
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 # Function to generate bot response
 def get_response(user_input):
@@ -55,4 +64,4 @@ def get_response(user_input):
 
 # Execution
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=9875)
