@@ -41,21 +41,24 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512)
         llama_output = llama_model(bert_output.last_hidden_state)
         llama_output_text = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
+        # Extract input IDs from Llama output
+        llama_input_ids = llama_output["input_ids"]
+
         # Process Llama output with GPT-2
-        gpt2_input = gpt2_tokenizer(llama_output_text, return_tensors="pt", truncation=True, max_length=512)
+        gpt2_input = gpt2_tokenizer(llama_input_ids, return_tensors="pt", truncation=True, max_length=512)
 
         # Apply decoding strategy
         if decoding_strategy == "greedy":
             gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
             gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1,
-                                              num_beams=5)
+                                                num_beams=5)
         elif decoding_strategy == "top-k":
             gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
-                                              top_k=50)
+                                               top_k=50)
         elif decoding_strategy == "top-p":
             gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
-                                              top_p=0.95)
+                                               top_p=0.95)
 
         response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
@@ -64,6 +67,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512)
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
 
 # Set up routes
 @app.route('/')
@@ -74,8 +78,13 @@ def index():
 @limiter.limit("5 per minute")  # Rate limiting
 def chatbot():
     if request.method == 'POST':
+        # Extract user input from JSON object
         user_input = request.get_json().get('user_input', '')
+
+        # Generate response using the updated generate_response function
         response = generate_response(user_input)
+
+        # Return the response in JSON format
         return jsonify({'response': response})
     else:
         return render_template('index.html')
