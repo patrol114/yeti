@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, GPT2LMHeadModel
+from transformers import AutoTokenizer, AutoModel, GPT2LMHeadModel
 from flask import Flask, request, render_template, jsonify
 from flask_limiter import Limiter
 import nltk
@@ -16,12 +16,14 @@ port = 9875
 # Set up models and tokenizers
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2')
-llama_tokenizer = AutoTokenizer.from_pretrained('jarradh/llama2_70b_chat_uncensored')
+llama_model = AutoModel.from_pretrained('TheBloke/Llama-2-70B-GPTQ')
+llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-70B-GPTQ')
+bert_model = AutoModel.from_pretrained('bert-base')
+bert_tokenizer = AutoTokenizer.from_pretrained('bert-base')
 
-def generate_response(user_input):
-    # Check if llama_tokenizer is not None
-    if llama_tokenizer is not None:
-        # Process user input
+def generate_response(user_input, decoding_strategy="greedy", output_length=512):
+    try:
+        # Process user input with BERT tokenizer
         user_input = sub(r'[^\w\s]', '', str(user_input))  # Add conversion to string
         user_input = user_input.lower()
         tokens = word_tokenize(user_input)
@@ -31,22 +33,37 @@ def generate_response(user_input):
         # Convert tokens back to string
         user_input_str = " ".join(tokens)
 
-        # Generate response using LLM
-        llama_input = user_input_str
-        if llama_tokenizer is not None:
-            llama_output = llama_tokenizer(llama_input, return_tensors="pt", truncation=True, max_length=512)
-            if llama_output is not None and 'input_ids' in llama_output:
-                # Use 'input_ids' as input to GPT-2 model
-                llama_input_ids = llama_output['input_ids']
-                gpt2_output = gpt2_model.generate(llama_input_ids, max_length=512, num_return_sequences=1)
-                response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)  # Decode the tensor to text
-            else:
-                response = None
-        else:
-            response = None
-    else:
-        response = None
-    return response
+        # Process input with BERT model to understand user input
+        bert_input = bert_tokenizer(user_input_str, return_tensors="pt", truncation=True, max_length=512)
+        bert_output = bert_model(**bert_input)
+
+        # Generate response using Llama
+        llama_output = llama_model(bert_output.last_hidden_state)
+        llama_output_text = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
+
+        # Process Llama output with GPT-2
+        gpt2_input = gpt2_tokenizer(llama_output_text, return_tensors="pt", truncation=True, max_length=512)
+
+        # Apply decoding strategy
+        if decoding_strategy == "greedy":
+            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1)
+        elif decoding_strategy == "beam":
+            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1,
+                                              num_beams=5)
+        elif decoding_strategy == "top-k":
+            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
+                                              top_k=50)
+        elif decoding_strategy == "top-p":
+            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
+                                              top_p=0.95)
+
+        response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
+
+        return response
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 # Set up routes
 @app.route('/')
