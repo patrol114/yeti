@@ -10,10 +10,9 @@ from flask_ngrok import run_with_ngrok
 
 
 # Load pre-trained GPT-2 model
-gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-medium")
+gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2-medium")
-#llama_tokenizer = gpt2_tokenizer
-llama = Llama("lstm-large")
+llama = Llama("lstm-large", tokenizer=gpt2_tokenizer)
 
 
 # Flask App Initialization
