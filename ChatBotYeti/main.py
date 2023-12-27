@@ -5,19 +5,25 @@ from llama import Llama
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import ngrok
+from flask_ngrok import run_with_ngrok
 
-# Model Initialization
 
 # Load pre-trained GPT-2 model
-gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2")
-llama_tokenizer = gpt2_tokenizer
-llama = Llama("lstm-large", tokenizer=llama_tokenizer)
+gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-medium")
+gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2-medium")
+#llama_tokenizer = gpt2_tokenizer
+llama = Llama("lstm-large")
 
 
 # Flask App Initialization
 app = Flask(__name__)
 limiter = Limiter(app=app, key_func=get_remote_address)
+# Setup ngrok
+ngrok_tunnel = ngrok.connect(5000)
+print('Public URL:', ngrok_tunnel.public_url)
+
+run_with_ngrok(app)
 
 # Chatbot Functionality
 @app.route("/chatbot", methods=["POST"])
