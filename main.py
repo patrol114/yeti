@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoModel, GPT2LMHeadModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, GPT2LMHeadModel, MarianMTModel, MarianTokenizer
 from flask import Flask, request, render_template, jsonify
 from flask_limiter import Limiter
 import nltk
@@ -8,46 +8,46 @@ from nltk.tokenize import word_tokenize
 from re import sub
 import json
 
-# Set up Flask app and Limiter
+# Ustawienia aplikacji Flask i Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
 port = 9875
 
-# Set up models and tokenizers
-gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
-gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2')
-llama_model = AutoModel.from_pretrained('TheBloke/Llama-2-70B-GPTQ')
-llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-70B-GPTQ')
+# Inicjalizacja modeli i tokenizatorów
+gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl')
+gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl')
+llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-70B-GPTQ', device_map="auto", trust_remote_code=False, revision="main")
+llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-70B-GPTQ', use_fast=True)
 bert_model = AutoModel.from_pretrained('bert-base')
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base')
+translator_model_name = 'Helsinki-NLP/opus-mt-en-pl'  # Model do tłumaczenia na język polski
+translator_tokenizer = MarianTokenizer.from_pretrained(translator_model_name)
+translator_model = MarianMTModel.from_pretrained(translator_model_name)
 
-def generate_response(user_input, decoding_strategy="greedy", output_length=512):
+def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
     try:
-        # Process user input with BERT tokenizer
-        user_input = sub(r'[^\w\s]', '', str(user_input))  # Add conversion to string
+        # Przetwarzanie wejścia użytkownika za pomocą tokenizatora BERT
+        user_input = sub(r'[^\w\s]', '', str(user_input))  # Dodanie konwersji do ciągu znaków
         user_input = user_input.lower()
         tokens = word_tokenize(user_input)
         stop_words = set(stopwords.words('english'))
         tokens = [token for token in tokens if token not in stop_words]
 
-        # Convert tokens back to string
+        # Konwersja tokenów z powrotem do ciągu znaków
         user_input_str = " ".join(tokens)
 
-        # Process input with BERT model to understand user input
+        # Przetworzenie wejścia za pomocą modelu BERT
         bert_input = bert_tokenizer(user_input_str, return_tensors="pt", truncation=True, max_length=512)
         bert_output = bert_model(**bert_input)
 
-        # Generate response using Llama
-        llama_output = llama_model(bert_output.last_hidden_state)
-        llama_output_text = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
+        # Generowanie odpowiedzi przy użyciu Llama
+        llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
+        llama_output = llama_model.generate(llama_input, max_length=100, pad_token_id=50256)
 
-        # Extract input IDs from Llama output
-        llama_input_ids = llama_output["input_ids"]
+        # Przetworzenie wyniku Llama za pomocą modelu GPT-2
+        gpt2_input = gpt2_tokenizer(llama_output, return_tensors="pt", truncation=True, max_length=512)
 
-        # Process Llama output with GPT-2
-        gpt2_input = gpt2_tokenizer(llama_input_ids, return_tensors="pt", truncation=True, max_length=512)
-
-        # Apply decoding strategy
+        # Zastosowanie strategii dekodowania
         if decoding_strategy == "greedy":
             gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
@@ -62,29 +62,36 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512)
 
         response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
+        # Tłumaczenie odpowiedzi na język polski, jeśli jest to wymagane
+        if translate_to_polish:
+            translation_tokens = translator_tokenizer.prepare_seq2seq_batch([response], return_tensors="pt")
+            translated_output = translator_model.generate(**translation_tokens)
+            response = translator_tokenizer.decode(translated_output[0], skip_special_tokens=True)
+
         return response
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Wystąpił błąd: {e}")
         return None
 
-
-# Set up routes
+# Ustawienia tras
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/chatbot', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Rate limiting
+@limiter.limit("5 per minute")  # Ograniczenie liczby żądań
 def chatbot():
     if request.method == 'POST':
-        # Extract user input from JSON object
+        # Wyodrębnienie wejścia użytkownika z obiektu JSON
         user_input = request.get_json().get('user_input', '')
+        decoding_strategy = request.get_json().get('decoding_strategy', '')
+        translate_to_polish = request.get_json().get('translate_to_polish', False)
 
-        # Generate response using the updated generate_response function
-        response = generate_response(user_input)
+        # Generowanie odpowiedzi za pomocą zaktualizowanej funkcji generate_response
+        response = generate_response(user_input, decoding_strategy, translate_to_polish)
 
-        # Return the response in JSON format
+        # Zwróć odpowiedź w formacie JSON
         return jsonify({'response': response})
     else:
         return render_template('index.html')
