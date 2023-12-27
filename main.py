@@ -15,7 +15,7 @@ limiter = Limiter(app)
 # Set up models and tokenizers
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2')
-llama_tokenizer = AutoTokenizer.from_pretrained('Nelsonxx1/llama-2-70b-chat')
+llama_tokenizer = AutoTokenizer.from_pretrained('jarradh/llama2_70b_chat_uncensored')
 
 # Define a function to generate responses using both models
 def generate_response(user_input):
