@@ -6,15 +6,10 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from re import sub
-import ngrok
 
 # Set up Flask app and Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
-
-# Konfiguracja ngrok
-ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
-# Numer portu, na którym będzie działać aplikacja
 port = 9875
 
 # Set up models and tokenizers
@@ -64,14 +59,6 @@ def chatbot():
     else:
         return render_template('index.html')
 
-# Set up ngrok
-#ngrok_tunnel = ngrok.connect(port)
-#listener = ngrok.werkzeug_develop()
-#listener = ngrok.forward(port, authtoken_from_env=True)
-
-#print(f"Ingress established at: {listener.url()}");
-
 if __name__ == '__main__':
-   #print(f"Link Do ngroka {listener.url()}");
     app.run(port=port, debug=True)
 
