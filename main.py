@@ -56,9 +56,9 @@ def index():
 @limiter.limit("5 per minute")  # Rate limiting
 def chatbot():
     if request.method == 'POST':
-        user_input = request.form.get('message')
+        user_input = request.get_json().get('user_input', '')
         response = generate_response(user_input)
-        return response
+        return jsonify({'response': response})
     else:
         return render_template('index.html')
 
