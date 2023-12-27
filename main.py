@@ -67,11 +67,11 @@ def chatbot():
 # Set up ngrok
 #ngrok_tunnel = ngrok.connect(port)
 #listener = ngrok.werkzeug_develop()
-listener = ngrok.forward(port, authtoken_from_env=True)
+#listener = ngrok.forward(port, authtoken_from_env=True)
 
 #print(f"Ingress established at: {listener.url()}");
 
 if __name__ == '__main__':
-    print(f"Link Do ngroka {listener.url()}");
+   #print(f"Link Do ngroka {listener.url()}");
     app.run(port=port, debug=True)
 
