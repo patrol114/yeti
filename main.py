@@ -12,6 +12,8 @@ import json
 app = Flask(__name__)
 limiter = Limiter(app)
 port = 9875
+torch.backends.cuda.reserved_megabytes = 512
+torch.backends.cuda.max_split_size_mb = 512
 
 # Inicjalizacja modeli i tokenizatorów
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl')
