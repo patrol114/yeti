@@ -55,7 +55,7 @@ def get_response(user_input):
     llama_resp = llama.generate(user_input, max_gen_len=50)
 
     # Split the Llama response into parameters
-    llama_params = llama_resp.split()
+    llama_params = llama.params
 
     # Generate GPT-2 response
     gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
