@@ -23,7 +23,7 @@ ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 ngrok_tunnel = ngrok.connect(5601)
 
 # Pobierz publiczny adres URL z ngrok_tunnel
-public_url = ngrok_tunnel.public_url
+public_url = ngrok_tunnel.public_url if hasattr(ngrok_tunnel, 'public_url') else "N/A"
 
 print(public_url)
 
