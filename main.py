@@ -14,6 +14,7 @@ limiter = Limiter(app)
 port = 9875
 torch.backends.cuda.reserved_megabytes = 512
 torch.backends.cuda.max_split_size_mb = 512
+token = "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"
 
 # Inicjalizacja modeli i tokenizatorów
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl')
@@ -24,7 +25,7 @@ bert_model = AutoModel.from_pretrained('bert-base-uncased')
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 translator_model_name = 'Helsinki-NLP/opus-mt-en-pl'  # Model do tłumaczenia na język polski
 translator_tokenizer = MarianTokenizer.from_pretrained(translator_model_name)
-translator_model = MarianMTModel.from_pretrained(translator_model_name)
+translator_model = MarianMTModel.from_pretrained(translator_model_name, use_auth_token=token))
 
 def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
     try:
