@@ -51,8 +51,8 @@ def index():
 
 # Function to generate bot response
 def get_response(user_input):
-    # Get LLama response
-    llama_resp = llama.generate(user_input)
+    # Get LLama response with max_gen_len set to 50 (możesz dostosować wartość według potrzeb)
+    llama_resp = llama.generate(user_input, max_gen_len=50)
 
     # Generate GPT-2 response
     gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
