@@ -54,6 +54,9 @@ def get_response(user_input):
     # Get LLama response with max_gen_len set to 50 (możesz dostosować wartość według potrzeb)
     llama_resp = llama.generate(user_input, max_gen_len=50)
 
+    # Split the Llama response into parameters
+    llama_params = llama_resp.split()
+
     # Generate GPT-2 response
     gpt2_input = gpt2_tokenizer.encode(llama_resp, return_tensors="pt")
     gpt2_output = gpt2_model.generate(gpt2_input, max_length=100)
@@ -61,6 +64,7 @@ def get_response(user_input):
     # Post-process GPT-2 response
     response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
     return response
+
 
 # Execution
 if __name__ == "__main__":
