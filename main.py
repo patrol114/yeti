@@ -59,14 +59,14 @@ def chatbot():
     else:
         return render_template('chatbot.html')
 
-# Set up ngrok
-ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
-ngrok_tunnel = ngrok.connect(9875)
+if __name__ == "__main__":
 
-# Get public URL from status
-public_url = ngrok.get_status().get('public_url', None)
+    # Konfiguracja ngrok
+    ngrok.set_auth_token('2ZVsqXN2HRckjOt9KsJOtP2ssMl_49B9spuCEtipJDUBXNTLo')
 
-if __name__ == '__main__':
-    print("Public URL:", public_url)
-    app.run(debug=True, port=9875)
+    port = 9875
+    http_tunnel = ngrok.connect(port)
+    print("Public URL:", http_tunnel.public_url)
+
+    app.run(port=port, debug=True)
 
