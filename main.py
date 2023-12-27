@@ -62,16 +62,16 @@ def chatbot():
         response = generate_response(user_input)
         return response
     else:
-        return render_template('chatbot.html')
+        return render_template('index.html')
 
 # Set up ngrok
-ngrok_tunnel = ngrok.connect(port)
+#ngrok_tunnel = ngrok.connect(port)
 #listener = ngrok.werkzeug_develop()
 listener = ngrok.forward(port, authtoken_from_env=True)
 
 #print(f"Ingress established at: {listener.url()}");
 
 if __name__ == '__main__':
-    print(f"Ingress established at: {listener.url()}");
+    print(f"Link Do ngroka {listener.url()}");
     app.run(port=port, debug=True)
 
