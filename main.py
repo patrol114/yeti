@@ -66,12 +66,9 @@ def chatbot():
 
 # Set up ngrok
 ngrok_tunnel = ngrok.connect(port)
-listener = ngrok.forward(port, authtoken_from_env=True)
+listener = ngrok.werkzeug_develop()
 
-# Get public URL from status
-public_url = ngrok.get_status()['public_url']
 
 if __name__ == '__main__':
-    print("Public URL:", public_url)
     app.run(port=port, debug=True)
 
