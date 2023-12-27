@@ -28,15 +28,18 @@ def generate_response(user_input):
         stop_words = set(stopwords.words('english'))
         tokens = [token for token in tokens if token not in stop_words]
 
+        # Convert tokens back to string
+        user_input_str = " ".join(tokens)
+
         # Generate response using LLM
-        llama_input = " ".join(tokens)
+        llama_input = user_input_str
         if llama_tokenizer is not None:
             llama_output = llama_tokenizer(llama_input, return_tensors="pt", truncation=True, max_length=512)
             if llama_output is not None:
                 llama_output = llama_output.tolist()
 
         # Generate response using GPT-2
-        gpt2_input = " ".join(tokens)
+        gpt2_input = user_input_str
         if gpt2_input is not None:
             gpt2_output = gpt2_tokenizer(gpt2_input, return_tensors="pt", truncation=True, max_length=512)
             if gpt2_output is not None:
