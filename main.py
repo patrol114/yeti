@@ -39,7 +39,7 @@ def generate_response(user_input):
                 # Użyj 'input_ids' jako wejścia do modelu GPT-2
                 llama_input_ids = llama_output['input_ids']
                 gpt2_output = gpt2_model.generate(llama_input_ids, max_length=512, num_return_sequences=1)
-                response = gpt2_output[0].decode('utf-8')  # Dekoduj tensor do postaci tekstu
+                response = str(gpt2_output[0].decode('utf-8'))  # Dekoduj tensor do postaci tekstu i następnie konwertuj na ciąg znaków
             else:
                 response = None
         else:
