@@ -15,7 +15,7 @@
     name: train-model
     image: python:3.6
     command:
-      - python train.py {parameters}
+      - python main.py {parameters}
     inputs:
       - name: processed-data
         default: s3://yeti-datasets/processed-data.csv
@@ -28,7 +28,7 @@
     name: run-inference
     image: python:3.6
     command:
-      - python infer.py {parameters}
+      - python main.py {parameters}
     inputs:
       - name: model
         default: s3://yeti-models/model.h5
