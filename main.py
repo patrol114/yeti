@@ -23,8 +23,8 @@ llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-chat-GP
                                                    trust_remote_code=False,
                                                    revision="main")
 llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-chat-GPTQ', use_fast=True)
-bert_model = AutoModel.from_pretrained('bert-base')
-bert_tokenizer = AutoTokenizer.from_pretrained('bert-base')
+bert_model = AutoModel.from_pretrained('bert-base-cased')
+bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
 def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
     try:
