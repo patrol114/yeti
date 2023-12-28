@@ -7,7 +7,9 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from re import sub
 import json
-
+torch.backends.cuda.reserved_megabytes = 512
+torch.backends.cuda.max_split_size_mb = 512
+token = "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"
 # Set up Flask app and Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
