@@ -49,6 +49,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
 
         # Przetworzenie wyniku Llama za pomocą modelu GPT-2
         gpt2_input = gpt2_tokenizer(llama_output, return_tensors="pt", truncation=True, max_length=512)
+        gpt2_input = gpt2_input.to(gpt2_model.device)
 
         # Zastosowanie strategii dekodowania
         if decoding_strategy == "greedy":
