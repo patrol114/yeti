@@ -13,7 +13,6 @@ os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 app = Flask(__name__)
 limiter = Limiter(app)
 port = 9875
-torch.use_deterministic_algorithms(True)
 
 torch.backends.cuda.reserved_megabytes = 512
 torch.backends.cuda.max_split_size_mb = 512
@@ -50,7 +49,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
         print(llama_input.shape)
         # Dodanie maski uwagi i pad_token_id
-        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=llama_input)
+        llama_output = llama_model.generate(llama_input, max_length=200, pad_token_id=50256, attention_mask=llama_input)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
         # Przetworzenie wyniku Llama za pomocą modelu GPT-2
