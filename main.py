@@ -23,7 +23,7 @@ llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', 
 llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use_fast=True)
 bert_model = AutoModel.from_pretrained('bert-base-uncased')
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-translator_model_name = 'Helsinki-NLP/opus-mt-en-pl'  # Model do tłumaczenia na język polski
+translator_model_name = 'Helsinki-NLP/opus-mt-pl-en'  # Model do tłumaczenia na język polski
 translator_tokenizer = MarianTokenizer.from_pretrained(translator_model_name, use_auth_token=token)
 translator_model = MarianMTModel.from_pretrained(translator_model_name, use_auth_token=token)
 
