@@ -7,15 +7,17 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from re import sub
 import json
+
 torch.backends.cuda.reserved_megabytes = 512
 torch.backends.cuda.max_split_size_mb = 512
 token = "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"
-# Set up Flask app and Limiter
+
+# Ustawienie aplikacji Flask i Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
 port = 9875
 
-# Set up models and tokenizers
+# Ustawienie modeli i tokenizatorów
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl')
 llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-chat-GPTQ',
@@ -28,21 +30,21 @@ bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
 def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
     try:
-        # Process user input with BERT tokenizer
-        user_input = sub(r'[^\w\s]', '', str(user_input))  # Adding conversion to string
+        # Przetwarzanie wprowadzonego przez użytkownika tekstu za pomocą tokenizatora BERT
+        user_input = sub(r'[^\w\s]', '', str(user_input))  # Dodanie konwersji do łańcucha znaków
         user_input = user_input.lower()
         tokens = word_tokenize(user_input)
         stop_words = set(stopwords.words('english'))
         tokens = [token for token in tokens if token not in stop_words]
 
-        # Converting tokens back to a string
+        # Przekształcenie tokenów z powrotem na łańcuch znaków
         user_input_str = " ".join(tokens)
 
-        # Process input with BERT model
+        # Przetwarzanie wprowadzonych danych za pomocą modelu BERT
         bert_input = bert_tokenizer(user_input_str, return_tensors="pt", truncation=True, max_length=512)
         bert_output = bert_model(**bert_input)
 
-        # Generate responses using Llama and GPT-2
+        # Generowanie odpowiedzi za pomocą Llama i GPT-2
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
         llama_output = llama_model.generate(llama_input, max_length=200, pad_token_id=50256, attention_mask=llama_input)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
@@ -52,13 +54,13 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
         gpt2_output_decoded = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
-        # Collect predictions from all three models
+        # Zbieranie prognoz z trzech modeli
         predictions = [bert_output.argmax().item(), llama_output[0].argmax().item(), gpt2_output[0].argmax().item()]
 
-        # Determine the final response using majority voting
+        # Określenie finalnej odpowiedzi za pomocą głosowania większościowego
         final_prediction = max(set(predictions), key=predictions.count)
 
-        # Generate the final response using the appropriate model
+        # Generowanie finalnej odpowiedzi za pomocą odpowiedniego modelu
         if final_prediction == 0:
             final_response = bert_tokenizer.decode(bert_output[0], skip_special_tokens=True)
         elif final_prediction == 1:
@@ -66,7 +68,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         else:
             final_response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
-        # Translating the response to Polish if required
+        # Tłumaczenie odpowiedzi na język polski, jeśli jest to wymagane
         if translate_to_polish:
             translation_tokens = translator_tokenizer.prepare_seq2seq_batch([final_response], return_tensors="pt")
             translated_output = translator_model.generate(**translation_tokens)
@@ -75,7 +77,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         return final_response
 
     except Exception as e:
-        print(f"Error encountered: {e}")
+        print(f"Wystąpił błąd: {e}")
         return None
 
 # Set up routes
