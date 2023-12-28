@@ -60,11 +60,12 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
                                                 num_beams=5)
         elif decoding_strategy == "top-k":
             gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], do_sample=True, max_length=output_length,
-                                            top_k=50)
+                                                top_k=50)
         elif decoding_strategy == "top-p":
             gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], do_sample=True, max_length=output_length,
-                                            top_p=0.95)
-        response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
+                                                top_p=0.95)
+        else:  # domyślna strategia
+            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], max_length=output_length, num_return_sequences=1)
 
         # Tłumaczenie odpowiedzi na język polski, jeśli jest to wymagane
         if translate_to_polish:
