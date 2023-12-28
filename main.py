@@ -18,11 +18,11 @@ port = 9875
 # Set up models and tokenizers
 gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl')
-llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-70B-GPTQ',
+llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-chat-GPTQ',
                                                    device_map="auto",
                                                    trust_remote_code=False,
                                                    revision="main")
-llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-70B-GPTQ', use_fast=True)
+llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-chat-GPTQ', use_fast=True)
 bert_model = AutoModel.from_pretrained('bert-base')
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base')
 
