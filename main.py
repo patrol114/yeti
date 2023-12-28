@@ -7,7 +7,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from re import sub
 import json
-
+import os
+os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 # Ustawienia aplikacji Flask i Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
@@ -26,7 +27,7 @@ llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use
 bert_model = AutoModel.from_pretrained('bert-base-uncased')
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 translator_model_name = 'Helsinki-NLP/opus-mt-pl-en'  # Model do tłumaczenia na język polski
-translator_tokenizer = MarianTokenizer.from_pretrained(translator_model_name, use_auth_token=token)
+translator_tokenizer = MarianTokenizer.from_pretrained(translator_model_name, token=token)
 translator_model = MarianMTModel.from_pretrained(translator_model_name, token=token)
 
 def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
