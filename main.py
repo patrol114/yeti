@@ -45,6 +45,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
 
         # Generowanie odpowiedzi przy użyciu Llama
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
+        print(llama_input.shape)
         llama_output = llama_model.generate(llama_input, max_length=100, pad_token_id=50256)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
@@ -65,7 +66,8 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
             gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], do_sample=True, max_length=output_length,
                                                 top_p=0.95)
         else:  # domyślna strategia
-            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], max_length=output_length, num_return_sequences=1)
+            print(gpt2_input.shape)
+            gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
 
         # Tłumaczenie odpowiedzi na język polski, jeśli jest to wymagane
         if translate_to_polish:
