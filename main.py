@@ -46,7 +46,8 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         # Generowanie odpowiedzi przy użyciu Llama
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
         print(llama_input.shape)
-        llama_output = llama_model.generate(llama_input, max_length=100, pad_token_id=50256)
+        # Dodanie maski uwagi i pad_token_id
+        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=llama_input)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
         # Przetworzenie wyniku Llama za pomocą modelu GPT-2
