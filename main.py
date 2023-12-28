@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, GPT2LMHeadModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, GPT2LMHeadModel, AutoModel
 from flask import Flask, request, render_template, jsonify
 from flask_limiter import Limiter
 import nltk
