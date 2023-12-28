@@ -17,6 +17,8 @@ port = 9875
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 os.environ['OPTIMUM_DISABLE_EXLLAMA'] = 'True'  # Dodane ustawienie dla wyłączenia Exllama
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # Dodane ustawienie urządzenia
+
 # Inicjalizacja modeli i tokenizatorów
 model_names = {
     'gpt2': 'gpt2-xl',
@@ -33,7 +35,7 @@ logging.basicConfig(filename='chatbot.log', level=logging.INFO)
 # Funkcja do ładowania modeli i tokenizatorów
 def load_model_and_tokenizer(name):
     model_cls, tokenizer_cls = (AutoModelForCausalLM, AutoTokenizer) if name != 'bert' else (AutoModel, AutoTokenizer)
-    models[name]['model'] = model_cls.from_pretrained(model_names[name])
+    models[name]['model'] = model_cls.from_pretrained(model_names[name]).to(device)  # Przeniesienie modelu na urządzenie
     models[name]['tokenizer'] = tokenizer_cls.from_pretrained(model_names[name])
 
 # Ładowanie modeli na żądanie
@@ -52,7 +54,7 @@ def ensemble_predictions(user_input):
     for name, components in models.items():
         if name == 'translator':  # Pominięcie tłumacza dla ensemble
             continue
-        input_ids = components['tokenizer'].encode(filtered_input, return_tensors='pt')
+        input_ids = components['tokenizer'].encode(filtered_input, return_tensors='pt').to(device)  # Przeniesienie tensora na urządzenie
         output = components['model'].generate(input_ids, max_length=200)
         decoded_output = components['tokenizer'].decode(output[0], skip_special_tokens=True)
         predictions.append(decoded_output)
@@ -80,7 +82,7 @@ def chatbot():
         # Tłumaczenie odpowiedzi na polski, jeśli wymagane
         translate_to_polish = request.get_json().get('translate_to_polish', False)
         if translate_to_polish:
-            translation_tokens = models['translator']['tokenizer'].prepare_seq2seq_batch([response], return_tensors="pt")
+            translation_tokens = models['translator']['tokenizer'].prepare_seq2seq_batch([response], return_tensors="pt").to(device)  # Przeniesienie tensora na urządzenie
             translated_output = models['translator']['model'].generate(**translation_tokens)
             response = models['translator']['tokenizer'].decode(translated_output[0], skip_special_tokens=True)
 
