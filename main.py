@@ -46,24 +46,24 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
         # Generowanie odpowiedzi przy użyciu Llama
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
         llama_output = llama_model.generate(llama_input, max_length=100, pad_token_id=50256)
+        llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
         # Przetworzenie wyniku Llama za pomocą modelu GPT-2
-        gpt2_input = gpt2_tokenizer(llama_output, return_tensors="pt", truncation=True, max_length=512)
+        gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt")
         gpt2_input = gpt2_input.to(gpt2_model.device)
 
         # Zastosowanie strategii dekodowania
         if decoding_strategy == "greedy":
-            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1)
+            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
-            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, max_length=output_length, num_return_sequences=1,
+            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], max_length=output_length, num_return_sequences=1,
                                                 num_beams=5)
         elif decoding_strategy == "top-k":
-            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
-                                               top_k=50)
+            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], do_sample=True, max_length=output_length,
+                                            top_k=50)
         elif decoding_strategy == "top-p":
-            gpt2_output = gpt2_model.generate(gpt2_input.input_ids, do_sample=True, max_length=output_length,
-                                               top_p=0.95)
-
+            gpt2_output = gpt2_model.generate(gpt2_input['input_ids'], do_sample=True, max_length=output_length,
+                                            top_p=0.95)
         response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
         # Tłumaczenie odpowiedzi na język polski, jeśli jest to wymagane
@@ -89,6 +89,11 @@ def chatbot():
     if request.method == 'POST':
         # Wyodrębnienie wejścia użytkownika z obiektu JSON
         user_input = request.get_json().get('user_input', '')
+        if not isinstance(user_input, str):
+            # Obsługa błędu, np. rzucenie wyjątku lub zwrócenie komunikatu o błędzie
+            print("Błąd: Wejście użytkownika nie jest tekstem.")
+            return jsonify({'response': 'Błąd: Wejście użytkownika nie jest tekstem.'})
+
         decoding_strategy = request.get_json().get('decoding_strategy', '')
         translate_to_polish = request.get_json().get('translate_to_polish', False)
 
