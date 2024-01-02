@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+</head>
+<body>
+    <h1>Chatbot Interface</h1>
+    <form id="chatForm">
+        <label for="userInput">Your message:</label>
+        <input type="text" id="userInput" name="userInput" required>
+        <button type="button" onclick="sendUserInput()">Send</button>
+    </form>
+    <div id="responseArea"></div>
+
+    <script>
+        function sendUserInput() {
+            var userInput = document.getElementById("userInput").value;
+
+            fetch('/chatbot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_input: userInput,
+                    decoding_strategy: 'greedy',  // You may adjust this based on your needs
+                    translate_to_polish: false  // You may adjust this based on your needs
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("responseArea").innerText = data.response;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
