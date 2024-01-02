@@ -89,7 +89,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
 # Route settings
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index1.html')
 
 @app.route('/chatbot', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")  # Limiting the number of requests
