@@ -14,9 +14,6 @@ import re
 # Ustawienie zmiennej środowiskowej
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
-nltk.download('stopwords')
-nltk.download('punkt')
-
 # Konfiguracja aplikacji Flask i Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
@@ -33,16 +30,18 @@ bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en')
 
 # Funkcja do generowania odpowiedzi na podstawie wejścia użytkownika
-def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_pl=False):
+def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=False):
     try:
-        print(f"Input from the user: {user_input}")
+        # Initialize the NLTK library
+        nltk.download('punkt')
+        nltk.download('stopwords')
 
         # Process the user input using the BERT tokenizer
         cleaned_user_input = re.sub(r"[^\w\s]", "", str(user_input))
         lowered_user_input = cleaned_user_input.lower()
         tokens = word_tokenize(lowered_user_input)
-        stop_words = set(nltk.words('english'))
-        filtered_tokens = [token for token in tokens if token not in stop_words]
+        stop_words = set(stopwords.words('english'))
+        filtered_tokens = nltk.word_filter(tokens, stop_words=stop_words)
 
         # Convert tokens back to a string
         context_tokens = " ".join(filtered_tokens)
