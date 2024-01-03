@@ -46,8 +46,6 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
 
         # Convert tokens back to a string
         context_tokens = " ".join(filtered_tokens)
-
-        # Process the input using the BERT model
         # Przetworzenie wejścia za pomocą modelu BERT
         bert_input = bert_tokenizer(context_tokens, return_tensors="pt", truncation=True, max_length=512).to('cuda')
         bert_output = bert_model(**bert_input)
@@ -56,7 +54,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         input_ids = bert_tokenizer.convert_tokens_to_ids(tokens)
 
         # Konwersja input_ids na tensor PyTorch
-        input_ids = torch.tensor(input_ids).unsqueeze(0)
+        input_ids = torch.tensor(input_ids).unsqueeze(0).to('cuda')
 
         # Przesyłanie do przodu przez model BERT
         outputs = bert_model(input_ids)
