@@ -47,6 +47,8 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
 
         # Generating response using Llama
         llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt')
+        llama_input = llama_input.to(llama_model.device)
+
         print(llama_input.shape)
         # Adding attention mask and pad_token_id
         llama_output = llama_model.generate(llama_input, max_length=200, pad_token_id=50256, attention_mask=llama_input)
@@ -54,6 +56,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
 
         # Processing Llama result with GPT-2 model
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt")
+        gpt2_input = gpt2_input.squeeze(0)
         gpt2_input = gpt2_input.to(gpt2_model.device)
 
         # Applying decoding strategy
@@ -70,7 +73,7 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
                                               top_p=0.95)
         else:  # default strategy
             print(gpt2_input.shape)
-            gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
+            gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1, config={'use_cache': False})
 
         response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
