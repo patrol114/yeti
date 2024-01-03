@@ -28,38 +28,43 @@ bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en')
 
 # Funkcja do generowania odpowiedzi na podstawie wejścia użytkownika
-def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_polish=False):
+def generate_response(user_input, decoding_strategy="greedy", output_length=512, translate_to_pl=False):
     try:
-        print(f"Input od użytkownika: {user_input}")
-        # Przetwarzanie wejścia użytkownika za pomocą tokenizatora BERT
-        user_input = sub(r'[^\w\s]', '', str(user_input))
-        user_input = user_input.lower()
-        tokens = word_tokenize(user_input)
-        stop_words = set(stopwords.words('english'))
-        tokens = [token for token in tokens if token not in stop_words]
+        print(f"Input from the user: {user_input}")
 
-        # Konwersja tokenów z powrotem do stringa
-        user_input_str = " ".join(tokens)
-        input_ids = torch.tensor([1], device='cuda')  # DODANO DEKLARACJĘ input_ids
+        # Process the user input using the BERT tokenizer
+        cleaned_user_input = re.sub(r"[^\w\s]", "", str(user_input))
+        lowered_user_input = cleaned_user_input.lower()
+        tokens = word_tokenize(lowered_user_input)
+        stop_words = set(nltk.words('english'))
+        filtered_tokens = [token for token in tokens if token not in stop_words]
 
-        # Przetwarzanie wejścia za pomocą modelu BERT
+        # Convert tokens back to a string
+        context_tokens = " ".join(filtered_tokens)
+
+        # Process the input using the BERT model
         bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
-        bert_input = bert_tokenizer(user_input_str, return_tensors="pt", truncation=True, max_length=512).to('cuda')
+        bert_input = bert_tokenizer(context_tokens, return_tensors="pt", truncation=True, max_length=512).to('cuda')
         bert_output = bert_model(**bert_input)
-        print(f"Output od BERT: {bert_output}")
+        print(f"BERT output: {bert_output}")
 
-        # Generowanie odpowiedzi za pomocą Llama
+        # Generate the response using Llama
         llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map="auto", trust_remote_code=False, revision="main").to('cuda')
-        llama_input = llama_tokenizer.encode(user_input_str, return_tensors='pt').to('cuda')
-        # Dodawanie maski uwagi i pad_token_id
-        llama_output = llama_model.generate(llama_input, max_length=100, pad_token_id=50256, attention_mask=llama_input)
-        llama_output = llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
+        context_ids = bert_output["input_ids"]
+        llama_input = llama_tokenizer(context_tokens, return_tensors="pt").to('cuda')
 
-        # Przetwarzanie wyniku z Llama za pomocą modelu GPT-2
+        # Add attention mask and pad token id
+        attention_mask = torch.ones_like(llama_input["input_ids"], device='cuda')
+        llama_input["attention_mask"] = attention_mask
+        llama_input["decoder_input_ids"] = torch.ones_like(llama_input["input_ids"], device='cuda')
+        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=attention_mask)
+        llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
+
+        # Process the result from Llama using GPT-2
         gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl').to('cuda')
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
 
-        # Zastosowanie strategii dekodowania
+        # Apply different decoding strategies based on the provided parameter
         if decoding_strategy == "greedy":
             gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
@@ -68,24 +73,21 @@ def generate_response(user_input, decoding_strategy="greedy", output_length=512,
             gpt2_output = gpt2_model.generate(gpt2_input, do_sample=True, max_length=output_length, top_k=50)
         elif decoding_strategy == "top-p":
             gpt2_output = gpt2_model.generate(gpt2_input, do_sample=True, max_length=output_length, top_p=0.95)
-        else:  # strategia domyślna
+        else:  # Default strategy
             gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
 
-        response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
-
-        # Tłumaczenie odpowiedzi na polski, jeśli wymagane
-        if translate_to_polish:
+        # Translate the response to Polish if required
+        if translate_to_pl:
             translator_model = MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-pl-en').to('cuda')
-            translation_tokens = translator_tokenizer.prepare_seq2seq_batch([response], return_tensors="pt").to('cuda')
+            translation_tokens = translator_tokenizer.prepare_seq2seq_batch([gpt2_output[0]], return_tensors="pt").to('cuda')
             translated_output = translator_model.generate(**translation_tokens)
             response = translator_tokenizer.decode(translated_output[0], skip_special_tokens=True)
 
-        print(f"Odpowiedź wygenerowana: {response}")
-
+        print(f"Generated response: {response}")
         return response
 
     except Exception as e:
-        print(f"Wystąpił błąd: {e}")
+        print(f"An error occurred: {e}")
         return None
 
 # Ustawienia tras
@@ -94,7 +96,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/chatbot', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Ograniczenie liczby żądań
+@limiter.limit("5 per minute")
 def chatbot():
     if request.method == 'POST':
         # Wyciągnięcie wejścia użytkownika z obiektu JSON
@@ -105,10 +107,10 @@ def chatbot():
             return jsonify({'response': 'Błąd: Wejście użytkownika nie jest tekstem.'})
 
         decoding_strategy = request.get_json().get('decoding_strategy', '')
-        translate_to_polish = request.get_json().get('translate_to_polish', False)
+        translate_to_pl = request.get_json().get('translate_to_pl', False)
 
         # Generowanie odpowiedzi za pomocą zaktualizowanej funkcji generate_response
-        response = generate_response(user_input, decoding_strategy, translate_to_polish)
+        response = generate_response(user_input, decoding_strategy, translate_to_pl)
 
         # Zwrot odpowiedzi jako JSON
         return jsonify({'response': response})
