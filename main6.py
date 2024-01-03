@@ -14,6 +14,9 @@ import re
 # Ustawienie zmiennej środowiskowej
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
+nltk.download('stopwords')
+nltk.download('punkt')
+
 # Konfiguracja aplikacji Flask i Limiter
 app = Flask(__name__)
 limiter = Limiter(app)
