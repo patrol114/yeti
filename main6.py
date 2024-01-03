@@ -69,6 +69,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         # Przetworzenie wyniku z modelu Llama za pomocą GPT-2
         gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
+
         # Zastosowanie różnych strategii dekodowania w zależności od parametru
         output_length = 512  # Długość maksymalna odpowiedzi
         if decoding_strategy == "greedy":
