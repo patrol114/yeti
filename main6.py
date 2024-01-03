@@ -47,10 +47,20 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         context_tokens = " ".join(filtered_tokens)
 
         # Process the input using the BERT model
-        bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
+        # Przetworzenie wejścia za pomocą modelu BERT
         bert_input = bert_tokenizer(context_tokens, return_tensors="pt", truncation=True, max_length=512).to('cuda')
         bert_output = bert_model(**bert_input)
-        print(f"BERT output: {bert_output}")
+
+        # Konwersja tokenów na input_ids
+        input_ids = bert_tokenizer.convert_tokens_to_ids(tokens)
+
+        # Konwersja input_ids na tensor PyTorch
+        input_ids = torch.tensor(input_ids).unsqueeze(0)
+
+        # Przesyłanie do przodu przez model BERT
+        outputs = bert_model(input_ids)
+
+        print(f"Wyjście BERT: {bert_output}")
 
         # Generate the response using Llama
         llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map="auto", trust_remote_code=False, revision="main").to('cuda')
