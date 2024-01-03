@@ -23,15 +23,16 @@ port = 9875
 torch.backends.cuda.reserved_megabytes = 512
 torch.backends.cuda.max_split_size_mb = 512
 
+device_map = {0: [0,1,2,3,4,5,6,7,8,9,10,11,12], 1: [0,1,2,3,4,5,6,7,8,9,10,11,12]}
+
 bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
-llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map="auto", trust_remote_code=False, revision="main").to('cuda')
+llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map=device_map, trust_remote_code=False, revision="main").to('cuda')
 gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
 
-bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased').to()
-
-llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use_fast=True).to('cuda')
-gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl').to('cuda')
-translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en').to('cuda')
+bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use_fast=True)
+gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl')
+translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en')
 
 # Funkcja do generowania odpowiedzi na podstawie wejścia użytkownika
 def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=False):
@@ -69,7 +70,6 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         print(f"Wyjście Generative LLAMA: {llama_output_decoded}")
 
         # Przetworzenie wyniku z modelu Llama za pomocą GPT-2
-        gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
 
         # Zastosowanie różnych strategii dekodowania w zależności od parametru
