@@ -8,6 +8,8 @@ from nltk.tokenize import word_tokenize
 from re import sub
 import json
 import os
+import re
+
 
 # Ustawienie zmiennej środowiskowej
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
