@@ -41,7 +41,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         lowered_user_input = cleaned_user_input.lower()
         tokens = word_tokenize(lowered_user_input)
         stop_words = set(stopwords.words('english'))
-        filtered_tokens = nltk.word_filter(tokens, stop_words=stop_words)
+        filtered_tokens = [token for token in tokens if token not in stop_words]
 
         # Convert tokens back to a string
         context_tokens = " ".join(filtered_tokens)
