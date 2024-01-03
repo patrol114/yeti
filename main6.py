@@ -113,7 +113,7 @@ def chatbot():
         # Zwrot odpowiedzi jako JSON
         return jsonify({'response': response})
     else:
-        return render_template('index1.html')
+        return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(port=port, debug=True)
