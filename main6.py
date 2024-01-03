@@ -61,7 +61,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         attention_mask_llama = torch.ones_like(llama_input["input_ids"], device='cuda')
         llama_input["attention_mask"] = attention_mask_llama
         llama_input["decoder_input_ids"] = torch.ones_like(llama_input["input_ids"], device='cuda')
-        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=attention_mask_llama)
+        llama_output = llama_model.generate(llama_input["input_ids"], max_length=512, pad_token_id=50256, attention_mask=attention_mask_llama)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
         print(f"Wyjście Generative LLAMA: {llama_output_decoded}")
