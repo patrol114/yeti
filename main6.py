@@ -72,6 +72,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
 
         # Zastosowanie różnych strategii dekodowania w zależności od parametru
+        output_length = 512  # Długość maksymalna odpowiedzi
         if decoding_strategy == "greedy":
             gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
