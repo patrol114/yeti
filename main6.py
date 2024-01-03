@@ -50,8 +50,7 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         # Przetworzenie wejścia BERT
         bert_input = bert_tokenizer(context_tokens, return_tensors="pt", truncation=True, max_length=512).to('cuda')
         bert_output = bert_model(**bert_input)
-        bert_output_decoded = bert_tokenizer.decode(bert_output["input_ids"][0], skip_special_tokens=True)
-
+        bert_output_decoded = bert_tokenizer.decode(bert_input["input_ids"][0], skip_special_tokens=True)
         print(f"Wyjście BERT: {bert_output_decoded}")
 
         # Generowanie odpowiedzi za pomocą modelu Llama
@@ -70,7 +69,6 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
         # Przetworzenie wyniku z modelu Llama za pomocą GPT-2
         gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
-
         # Zastosowanie różnych strategii dekodowania w zależności od parametru
         output_length = 512  # Długość maksymalna odpowiedzi
         if decoding_strategy == "greedy":
