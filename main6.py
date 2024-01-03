@@ -27,7 +27,8 @@ bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
 llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map="auto", trust_remote_code=False, revision="main").to('cuda')
 gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
 
-bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased').to('cuda')
+bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased').to()
+
 llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use_fast=True).to('cuda')
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl').to('cuda')
 translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en').to('cuda')
