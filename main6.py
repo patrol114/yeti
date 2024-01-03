@@ -27,6 +27,7 @@ torch.backends.cuda.max_split_size_mb = 512
 gpt2_tokenizer = AutoTokenizer.from_pretrained('gpt2-xl')
 llama_tokenizer = AutoTokenizer.from_pretrained('TheBloke/Llama-2-13B-GPTQ', use_fast=True)
 bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
 translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-en')
 
 # Funkcja do generowania odpowiedzi na podstawie wejścia użytkownika
