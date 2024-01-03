@@ -26,15 +26,7 @@ torch.backends.cuda.max_split_size_mb = 512
 device_map = {0: [0,1,2,3,4,5,6,7,8,9,10,11,12], 1: [0,1,2,3,4,5,6,7,8,9,10,11,12]}
 
 bert_model = AutoModel.from_pretrained('bert-base-uncased').to('cuda')
-llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', trust_remote_code=False, revision="main").to('cuda')
-
-# Wyłączanie modułu Llama
-llama_model.lm_head = llama_model.lm_head.to('cpu')
-
-# Dalsza część kodu, np. wczytywanie tokenizatora itp.
-
-# Włączanie modułu Llama z powrotem
-llama_model.lm_head = llama_model.lm_head.to('cuda')
+llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', trust_remote_code=False, revision="main").to('cpu')
 
 gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
 
