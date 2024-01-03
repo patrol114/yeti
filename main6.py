@@ -33,51 +33,45 @@ translator_tokenizer = MarianTokenizer.from_pretrained('Helsinki-NLP/opus-mt-pl-
 # Funkcja do generowania odpowiedzi na podstawie wejścia użytkownika
 def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=False):
     try:
-        # Initialize the NLTK library
+        # Inicjalizacja biblioteki NLTK
         nltk.download('punkt')
         nltk.download('stopwords')
 
-        # Process the user input using the BERT tokenizer
+        # Przetworzenie wejścia użytkownika za pomocą tokenizatora BERT
         cleaned_user_input = re.sub(r"[^\w\s]", "", str(user_input))
         lowered_user_input = cleaned_user_input.lower()
         tokens = word_tokenize(lowered_user_input)
         stop_words = set(stopwords.words('english'))
         filtered_tokens = [token for token in tokens if token not in stop_words]
 
-        # Convert tokens back to a string
+        # Konwersja tokenów z powrotem na ciąg znaków
         context_tokens = " ".join(filtered_tokens)
-        # Przetworzenie wejścia za pomocą modelu BERT
+
+        # Przetworzenie wejścia BERT
         bert_input = bert_tokenizer(context_tokens, return_tensors="pt", truncation=True, max_length=512).to('cuda')
         bert_output = bert_model(**bert_input)
+        bert_output_decoded = bert_tokenizer.decode(bert_output["input_ids"][0], skip_special_tokens=True)
 
-        # Konwersja tokenów na input_ids
-        input_ids = bert_tokenizer.convert_tokens_to_ids(tokens)
+        print(f"Wyjście BERT: {bert_output_decoded}")
 
-        # Konwersja input_ids na tensor PyTorch
-        input_ids = torch.tensor(input_ids).unsqueeze(0).to('cuda')
-
-        # Przesyłanie do przodu przez model BERT
-        outputs = bert_model(input_ids)
-
-        print(f"Wyjście BERT: {bert_output}")
-
-        # Generate the response using Llama
+        # Generowanie odpowiedzi za pomocą modelu Llama
         llama_model = AutoModelForCausalLM.from_pretrained('TheBloke/Llama-2-13B-GPTQ', device_map="auto", trust_remote_code=False, revision="main").to('cuda')
-        context_ids = bert_output["input_ids"]
-        llama_input = llama_tokenizer(context_tokens, return_tensors="pt").to('cuda')
+        llama_input = llama_tokenizer(bert_output_decoded, return_tensors="pt").to('cuda')
 
-        # Add attention mask and pad token id
-        attention_mask = torch.ones_like(llama_input["input_ids"], device='cuda')
-        llama_input["attention_mask"] = attention_mask
+        # Dodanie maski uwagi i identyfikatora tokena pad
+        attention_mask_llama = torch.ones_like(llama_input["input_ids"], device='cuda')
+        llama_input["attention_mask"] = attention_mask_llama
         llama_input["decoder_input_ids"] = torch.ones_like(llama_input["input_ids"], device='cuda')
-        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=attention_mask)
+        llama_output = llama_model.generate(llama_input, max_length=512, pad_token_id=50256, attention_mask=attention_mask_llama)
         llama_output_decoded = llama_tokenizer.decode(llama_output[0], skip_special_tokens=True)
 
-        # Process the result from Llama using GPT-2
-        gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2-xl').to('cuda')
+        print(f"Wyjście Generative LLAMA: {llama_output_decoded}")
+
+        # Przetworzenie wyniku z modelu Llama za pomocą GPT-2
+        gpt2_model = AutoModelForCausalLM.from_pretrained('gpt2-xl').to('cuda')
         gpt2_input = gpt2_tokenizer.encode(llama_output_decoded, return_tensors="pt").to('cuda')
 
-        # Apply different decoding strategies based on the provided parameter
+        # Zastosowanie różnych strategii dekodowania w zależności od parametru
         if decoding_strategy == "greedy":
             gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
         elif decoding_strategy == "beam":
@@ -86,22 +80,25 @@ def generate_response(user_input, decoding_strategy="greedy", translate_to_pl=Fa
             gpt2_output = gpt2_model.generate(gpt2_input, do_sample=True, max_length=output_length, top_k=50)
         elif decoding_strategy == "top-p":
             gpt2_output = gpt2_model.generate(gpt2_input, do_sample=True, max_length=output_length, top_p=0.95)
-        else:  # Default strategy
+        else:  # Strategia domyślna
             gpt2_output = gpt2_model.generate(gpt2_input, max_length=output_length, num_return_sequences=1)
 
-        # Translate the response to Polish if required
+        # Przetłumacz odpowiedź, jeśli wymagane
         if translate_to_pl:
             translator_model = MarianMTModel.from_pretrained('Helsinki-NLP/opus-mt-pl-en').to('cuda')
             translation_tokens = translator_tokenizer.prepare_seq2seq_batch([gpt2_output[0]], return_tensors="pt").to('cuda')
             translated_output = translator_model.generate(**translation_tokens)
             response = translator_tokenizer.decode(translated_output[0], skip_special_tokens=True)
+        else:
+            response = gpt2_tokenizer.decode(gpt2_output[0], skip_special_tokens=True)
 
         print(f"Generated response: {response}")
         return response
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Wystąpił błąd: {e}")
         return None
+
 
 # Ustawienia tras
 @app.route('/')
