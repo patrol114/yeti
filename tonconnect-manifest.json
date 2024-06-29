@@ -2,6 +2,6 @@
     "name": "YetiCoinTap Testnet",
     "description": "YetiCoinTap game integration with TON Wallet on testnet",
     "iconUrl": "https://beige-impressed-canidae-864.mypinata.cloud/ipfs/QmXr1LJNhGzVyff69fXokxjFJ5ntQohw2h8NWmWxpskcsA",
-    "url": "https://iguana-wired-moderately.ngrok-free.app"
-
+    "url": "https://iguana-wired-moderately.ngrok-free.app",
+    "bridge_url": ""
 }
