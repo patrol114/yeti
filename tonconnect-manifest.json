@@ -1,7 +1,7 @@
 {
-    "name": "YetiCoinTap Testnet",
-    "description": "YetiCoinTap game integration with TON Wallet on testnet",
+    "name": "YetiCoinTap",
+    "description": "YetiCoinTap game integration with TON Wallet",
     "iconUrl": "https://beige-impressed-canidae-864.mypinata.cloud/ipfs/QmXr1LJNhGzVyff69fXokxjFJ5ntQohw2h8NWmWxpskcsA",
     "url": "https://57ao9hnmkhq2.share.zrok.io/tonconnect/callback",
-    "bridge_url": ""
+    "bridge_url": "https://bridge.ton.org"
 }
